@@ -1,0 +1,14 @@
+services:
+  satisfactory-server:
+    container_name: 'satisfactory'
+    hostname: 'satisfactory'
+    image: 'wolveix/satisfactory-server:latest'
+    user: "${UID:-$(id -u)}:${GID:-$(id -g)}"
+    network_mode: 'host' # workaround, see https://github.com/wolveix/satisfactory-server/issues/260
+    ports:
+      - '7777:7777/udp'
+      - '7777:7777/tcp'
+    volumes:
+      - '../live/satisfactory/config:/config'
+    env_file: "../live/satisfactory/.env"
+    restart: unless-stopped
