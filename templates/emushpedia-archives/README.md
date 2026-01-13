@@ -13,8 +13,8 @@ pip3 install -r requirements.txt
 deactivate
 ```
 
-You then need to add the following line to your crontab (you can change when you want it to run):
+You then need to add the following line to your crontab (you can adjust when you want it to run):
 
 ```sh
-9 3 * * * /bin/bash -lc 'source <path_to_this_directory>/.env; <path_to_this_directory>/dump.sh >> "$EMUSHPEDIA_LOG_PATH" 2>&1'
+6 0 * * * /bin/bash -lc 'source <path_to_this_directory>/.env; <path_to_this_directory>/dump.sh >> "$EMUSHPEDIA_LOG_PATH" 2>&1'
 ```
