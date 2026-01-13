@@ -1,6 +1,6 @@
 services:
-  satisfactory-server:
+  monthly-polls:
     container_name: 'monthly-polls'
     image: 'qcoumes/monthly-polls:latest'
-    env_file: "../live/monthly-polls/.env"
+    env_file: "../live/${COMPOSE_ENV}/.env"
     restart: unless-stopped

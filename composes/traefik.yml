@@ -1,0 +1,63 @@
+services:
+  traefik:
+    image: traefik:v3
+    container_name: ${COMPOSE_ENV}
+    restart: unless-stopped
+
+    command:
+      # Logs
+      - "--log.level=INFO"
+      - "--accesslog=true"
+
+      # Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+
+      # Providers
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/configuration"
+      - "--providers.file.watch=true"
+
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=coumes.quentin@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ../live/${COMPOSE_ENV}/configuration:/configuration:/configuration
+      - ../live/${COMPOSE_ENV}/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    labels:
+      - "traefik.enable=true"
+
+      # Router for the Traefik dashboard / API
+      - "traefik.http.routers.${COMPOSE_ENV}.rule=${TRAEFIK_RULE}"
+      - "traefik.http.routers.${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_ENV}.service=api@internal"
+
+      # BasicAuth middleware
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_USER}"
+      - "traefik.http.routers.${COMPOSE_ENV}.middlewares=traefik-auth"
+
+    networks:
+      - web
+
+networks:
+  web:
+    name: web
+    driver: bridge

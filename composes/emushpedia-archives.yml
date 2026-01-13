@@ -1,24 +1,13 @@
 services:
-  filebrowser:
-    image: gtstef/filebrowser:beta
-    container_name: ${COMPOSE_ENV}-filebrowser
-    user: 1000:1000  # filebrowser user in the container
-    env_file: "../live/${COMPOSE_ENV}/.env"
-    volumes:
-      - ../live/${COMPOSE_ENV}/folder:/folder
-      - ../live/${COMPOSE_ENV}/conf:/home/filebrowser/data
-    restart: unless-stopped
-    networks:
-      - web
-
-  nginx:
+  emushpedia-archives:
     image: nginx:stable-alpine
-    container_name: ${COMPOSE_ENV}-nginx
+    container_name: ${COMPOSE_ENV}
     restart: unless-stopped
     expose:
       - "80"
     volumes:
       - ../live/${COMPOSE_ENV}/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ../live/${COMPOSE_ENV}/downloads/:/var/www/downloads:ro
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
@@ -27,9 +16,15 @@ services:
       - "traefik.http.routers.${COMPOSE_ENV}.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_ENV}.tls=true"
       - "traefik.http.routers.${COMPOSE_ENV}.tls.certresolver=letsencrypt"
-      - "traefik.http.services.${COMPOSE_ENV}-filebrowser.loadbalancer.server.port=80"
+
+      - "traefik.http.services.${COMPOSE_ENV}.loadbalancer.server.port=80"
     networks:
       - web
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   web:
