@@ -147,6 +147,7 @@ Example structure:
 
 ```yaml
 services:
+  
   myapp:
     image: myimage:latest
     container_name: ${COMPOSE_ENV}-myapp
@@ -155,6 +156,8 @@ services:
       - ../live/${COMPOSE_ENV}/data:/data
       - ../live/${COMPOSE_ENV}/config:/config
     restart: unless-stopped
+    expose:
+      - "80"
     networks:
       - web
     labels:
@@ -164,6 +167,7 @@ services:
       - "traefik.http.routers.${COMPOSE_ENV}.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_ENV}.tls=true"
       - "traefik.http.routers.${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${COMPOSE_ENV}-filebrowser.loadbalancer.server.port=80"
 
 networks:
   web:
