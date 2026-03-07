@@ -7,7 +7,7 @@ To run it you need to create a python3 virtual environnement named `venv` **in t
 
 ```sh
 python3 -m venv venv
-souce venv/bin/activate
+source venv/bin/activate
 pip3 install -U pip wheel setuptools
 pip3 install -r requirements.txt
 deactivate
@@ -16,5 +16,5 @@ deactivate
 You then need to add the following line to your crontab (you can change when you want it to run):
 
 ```sh
-6 0 * * * <path_to_this_directory>/dump.sh
+9 3 * * * /bin/bash -lc 'source <path_to_this_directory>/.env; <path_to_this_directory>/dump.sh >> "$EMUSHPEDIA_LOG_PATH" 2>&1'
 ```
