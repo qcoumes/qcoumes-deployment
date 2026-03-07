@@ -1,6 +1,6 @@
 services:
   filebrowser:
-    image: gtstef/filebrowser:beta
+    image: gtstef/filebrowser:stable
     container_name: ${COMPOSE_ENV}-filebrowser
     user: 1000:1000  # filebrowser user in the container
     env_file: "../live/${COMPOSE_ENV}/.env"
