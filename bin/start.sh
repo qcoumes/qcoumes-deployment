@@ -47,4 +47,4 @@ fi
 # Run the Docker Compose stop command
 echo
 echo "Running '${Purple}docker compose -f ${COMPOSE_FILE} start${Color_Off}'"
-docker compose -f "$COMPOSE_FILE" start
+docker compose -p "$COMPOSE_ENV" -f "$COMPOSE_FILE" start

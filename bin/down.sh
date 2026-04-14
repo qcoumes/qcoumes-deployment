@@ -48,4 +48,4 @@ fi
 # Run the Docker Compose
 echo
 echo "Running '${Purple}docker compose -f ${COMPOSE_FILE} down${Color_Off}'"
-docker compose -f "$COMPOSE_FILE" down
+docker compose -p "$COMPOSE_ENV" -f "$COMPOSE_FILE" down
