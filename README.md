@@ -167,7 +167,7 @@ services:
       - "traefik.http.routers.${COMPOSE_ENV}.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_ENV}.tls=true"
       - "traefik.http.routers.${COMPOSE_ENV}.tls.certresolver=letsencrypt"
-      - "traefik.http.services.${COMPOSE_ENV}-filebrowser.loadbalancer.server.port=80"
+      - "traefik.http.services.${COMPOSE_ENV}.loadbalancer.server.port=80"
 
 networks:
   web:

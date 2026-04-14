@@ -7,7 +7,7 @@ services:
     command:
       # Logs
       - "--log.level=INFO"
-      - "--accesslog=true"
+      # - "--accesslog=true"
 
       # Dashboard
       - "--api.dashboard=true"
@@ -16,6 +16,7 @@ services:
       # Providers
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web"
       - "--providers.file.directory=/configuration"
       - "--providers.file.watch=true"
 
@@ -36,12 +37,13 @@ services:
       - "443:443"
 
     volumes:
-      - ../live/${COMPOSE_ENV}/configuration:/configuration:/configuration
+      - ../live/${COMPOSE_ENV}/configuration:/configuration
       - ../live/${COMPOSE_ENV}/letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=web"
 
       # Router for the Traefik dashboard / API
       - "traefik.http.routers.${COMPOSE_ENV}.rule=${TRAEFIK_RULE}"
