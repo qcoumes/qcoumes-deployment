@@ -1,0 +1,172 @@
+
+
+services:
+
+  emushpedia-mysql:
+    image: mysql:9.6.0
+    container_name: ${COMPOSE_ENV}-mysql
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/mysql:/var/lib/mysql
+      - ../live/${COMPOSE_ENV}/mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "$${MYSQL_USER}", "-p$${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - web
+
+  emushpedia-mediawiki-fr:
+    image: mediawiki:stable
+    container_name: ${COMPOSE_ENV}-mediawiki-fr
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mysql:
+        condition: service_healthy
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/fr/images:/var/www/html/images
+      - ../live/${COMPOSE_ENV}/data/fr/LocalSettings.php:/var/www/html/LocalSettings.php
+      - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+      - ../live/${COMPOSE_ENV}/data/fr/favicon.ico:/var/www/html/favicon.ico
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - web
+
+  emushpedia-mediawiki-en:
+    image: mediawiki:stable
+    container_name: ${COMPOSE_ENV}-mediawiki-en
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mysql:
+        condition: service_healthy
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/en/images:/var/www/html/images
+      - ../live/${COMPOSE_ENV}/data/en/LocalSettings.php:/var/www/html/LocalSettings.php
+      - ../live/${COMPOSE_ENV}/data/en/favicon.ico:/var/www/html/favicon.ico
+      - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - web
+
+  emushpedia-mediawiki-es:
+    image: mediawiki:stable
+    container_name: ${COMPOSE_ENV}-mediawiki-es
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mysql:
+        condition: service_healthy
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/es/images:/var/www/html/images
+      - ../live/${COMPOSE_ENV}/data/es/LocalSettings.php:/var/www/html/LocalSettings.php
+      - ../live/${COMPOSE_ENV}/data/es/favicon.ico:/var/www/html/favicon.ico
+      - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - web
+
+  emushpedia-nginx-fr:
+    image: nginx:stable-alpine
+    container_name: ${COMPOSE_ENV}-nginx-fr
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mediawiki-fr:
+        condition: service_healthy
+    expose:
+      - "80"
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/fr/nginx/conf.d:/etc/nginx/conf.d:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.${COMPOSE_ENV}-fr.rule=${TRAEFIK_RULE_FR}"
+      - "traefik.http.routers.${COMPOSE_ENV}-fr.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}-fr.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}-fr.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${COMPOSE_ENV}-fr.loadbalancer.server.port=80"
+    networks:
+      - web
+
+  emushpedia-nginx-en:
+    image: nginx:stable-alpine
+    container_name: ${COMPOSE_ENV}-nginx-en
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mediawiki-en:
+        condition: service_healthy
+    expose:
+      - "80"
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/en/nginx/conf.d:/etc/nginx/conf.d:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.${COMPOSE_ENV}-en.rule=${TRAEFIK_RULE_EN}"
+      - "traefik.http.routers.${COMPOSE_ENV}-en.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}-en.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}-en.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${COMPOSE_ENV}-en.loadbalancer.server.port=80"
+    networks:
+      - web
+
+  emushpedia-nginx-es:
+    image: nginx:stable-alpine
+    container_name: ${COMPOSE_ENV}-nginx-es
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mediawiki-es:
+        condition: service_healthy
+    expose:
+      - "80"
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/es/nginx/conf.d:/etc/nginx/conf.d:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.${COMPOSE_ENV}-es.rule=${TRAEFIK_RULE_ES}"
+      - "traefik.http.routers.${COMPOSE_ENV}-es.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}-es.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}-es.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${COMPOSE_ENV}-es.loadbalancer.server.port=80"
+    networks:
+      - web
+
+  emushpedia-mail:
+    image: boky/postfix:latest
+    container_name: ${COMPOSE_ENV}-mail
+    restart: unless-stopped
+    environment:
+      HOSTNAME: ${COMPOSE_ENV}-mail
+      ALLOWED_SENDER_DOMAINS: emushpedia.com
+      POSTFIX_myhostname: mail.emushpedia.com
+      POSTFIX_mydomain: emushpedia.com
+      POSTFIX_INET_PROTOCOLS: ipv4
+    volumes:
+      - ../live/emushpedia/data/mail/keys:/etc/opendkim/keys
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: web
