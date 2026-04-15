@@ -58,7 +58,7 @@ $wgNamespaceAliases = [
 $wgEnableEmail = true;
 $wgEnableUserEmail = true; # UPO
 $wgEmergencyContact = "";
-$wgPasswordSender = "noreply@emushpedia.com";
+$wgPasswordSender = "noreply@<host>";
 $wgPasswordResetRoutes = [
     'username' => false,
     'email' => true,
@@ -102,7 +102,7 @@ $wgSharedTables = [
     'interwiki',
     'site_stats',
 ];
-$wgCookieDomain = '<host>';
+$wgCookieDomain = .'<host>';
 
 ## Shared memory settings
 $wgMainCacheType = CACHE_ACCEL;
@@ -185,8 +185,8 @@ wfLoadExtension( 'Cite' );
 wfLoadExtension( 'CiteThisPage' );
 wfLoadExtension( 'CodeEditor' );
 wfLoadExtension( 'ConfirmEdit' );
-wfLoadExtension( 'CreatePageUw' );
-wfLoadExtension( 'DarkMode' );
+wfLoadExtension( 'non-core/CreatePageUw' );
+wfLoadExtension( 'non-core/DarkMode' );
 wfLoadExtension( 'DiscussionTools' );
 wfLoadExtension( 'Echo' );
 wfLoadExtension( 'Gadgets' );
@@ -211,13 +211,13 @@ wfLoadExtension( 'TemplateStyles' );
 wfLoadExtension( 'TextExtracts' );
 wfLoadExtension( 'Thanks' );
 wfLoadExtension( 'TitleBlacklist' );
-wfLoadExtension( 'UserMerge' );
-wfLoadExtension( 'Variables' );
+wfLoadExtension( 'non-core/UserMerge' );
+wfLoadExtension( 'non-core/Variables' );
 wfLoadExtension( 'VisualEditor' );
 wfLoadExtension( 'WikiEditor' );
 
 wfLoadExtension( 'Scribunto' );
 $wgScribuntoDefaultEngine = 'luastandalone';
 
-wfLoadExtension( 'UniversalLanguageSelector' );
+wfLoadExtension( 'non-core/UniversalLanguageSelector' );
 $wgULSPosition = 'personal';
