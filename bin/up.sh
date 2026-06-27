@@ -44,7 +44,7 @@ printf "Using project env:\t${Cyan}${COMPOSE_ENV}${Color_Off}\n"
 
 # Check if the compose file exists
 if [ ! -f "$COMPOSE_FILE" ]; then
-  echo "${Red}❌ Error: Compose file './composes/$COMPOSE_FILE' does not exist.${Color_Off}"
+  echo "${Red}❌ Error: Compose file './$COMPOSE_FILE' does not exist.${Color_Off}"
   exit 1
 fi
 
