@@ -7,6 +7,7 @@ services:
     volumes:
       - ../live/${COMPOSE_ENV}/folder:/folder
       - ../live/${COMPOSE_ENV}/conf:/home/filebrowser/data
+      - ../live/${COMPOSE_ENV}/cache:/tmp/filebrowser
     restart: unless-stopped
     networks:
       - web
