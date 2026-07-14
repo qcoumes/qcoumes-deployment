@@ -1,0 +1,99 @@
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: ${COMPOSE_ENV}-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ../live/${COMPOSE_ENV}/mosquitto/config:/mosquitto/config
+      - ../live/${COMPOSE_ENV}/mosquitto/data:/mosquitto/data
+      - ../live/${COMPOSE_ENV}/mosquitto/log:/mosquitto/log
+    networks:
+      - zigbee
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: ${COMPOSE_ENV}-zigbee2mqtt
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    volumes:
+      - ../live/${COMPOSE_ENV}/zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_f830ff28389eef118099d2a661ce3355-if00-port0:/dev/zigbee
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.rule=${ZIGBEE2MQTT_TRAEFIK_RULE}"
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.service=zigbee2mqtt-${COMPOSE_ENV}"
+      - "traefik.http.services.zigbee2mqtt-${COMPOSE_ENV}.loadbalancer.server.port=8080"
+
+      - "traefik.http.middlewares.zigbee2mqtt-auth.basicauth.users=${ZIGBEE2MQTT_PASSWORD}"
+      - "traefik.http.middlewares.zigbee2mqtt-auth.basicauth.realm=Zigbee2MQTT"
+      - "traefik.http.routers.zigbee2mqtt-${COMPOSE_ENV}.middlewares=zigbee2mqtt-auth"
+    networks:
+      - zigbee
+      - web
+
+  influxdb:
+    image: influxdb:2
+    container_name: ${COMPOSE_ENV}-influxdb
+    restart: unless-stopped
+    volumes:
+      - ../live/${COMPOSE_ENV}/influxdb/data:/var/lib/influxdb2
+      - ../live/${COMPOSE_ENV}/influxdb/config:/etc/influxdb2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.influxdb-${COMPOSE_ENV}.rule=${INFLUXDB_TRAEFIK_RULE}"
+      - "traefik.http.routers.influxdb-${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.influxdb-${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.influxdb-${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.influxdb-${COMPOSE_ENV}.service=influxdb-${COMPOSE_ENV}"
+      - "traefik.http.services.influxdb-${COMPOSE_ENV}.loadbalancer.server.port=8086"
+    networks:
+      - zigbee
+      - web
+
+  telegraf:
+    image: telegraf:latest
+    container_name: ${COMPOSE_ENV}-telegraf
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - influxdb
+    volumes:
+      - ../live/${COMPOSE_ENV}/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    networks:
+      - zigbee
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ${COMPOSE_ENV}-grafana
+    restart: unless-stopped
+    volumes:
+      - ../live/${COMPOSE_ENV}/grafana:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.grafana-${COMPOSE_ENV}.rule=${GRAFANA_TRAEFIK_RULE}"
+      - "traefik.http.routers.grafana-${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.grafana-${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.grafana-${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.grafana-${COMPOSE_ENV}.service=grafana-${COMPOSE_ENV}"
+      - "traefik.http.services.grafana-${COMPOSE_ENV}.loadbalancer.server.port=3000"
+    networks:
+      - zigbee
+      - web
+
+networks:
+  zigbee:
+  web:
+    external: true
