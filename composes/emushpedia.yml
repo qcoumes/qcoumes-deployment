@@ -19,17 +19,59 @@ services:
     networks:
       - web
 
+  emushpedia-opensearch:
+    build:
+      context: ../live/${COMPOSE_ENV}/opensearch
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_ENV}-opensearch
+    restart: unless-stopped
+    environment:
+      cluster.name: ${COMPOSE_ENV}-cirrus
+      node.name: ${COMPOSE_ENV}-opensearch
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+      # Safe only because the service remains on an internal Docker network.
+      DISABLE_SECURITY_PLUGIN: "true"
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/opensearch:/usr/share/opensearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:9200/_cluster/health >/dev/null || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks:
+      - search
+
   emushpedia-mediawiki-fr:
-    image: mediawiki:stable
+    image: mediawiki:1.46.0
     container_name: ${COMPOSE_ENV}-mediawiki-fr
     restart: unless-stopped
     depends_on:
       emushpedia-mysql:
         condition: service_healthy
+      emushpedia-opensearch:
+        condition: service_healthy
     volumes:
       - ../live/${COMPOSE_ENV}/data/fr/images:/var/www/html/images
       - ../live/${COMPOSE_ENV}/data/fr/LocalSettings.php:/var/www/html/LocalSettings.php
       - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+      - ../live/${COMPOSE_ENV}/data/extensions/Elastica:/var/www/html/extensions/Elastica:ro
+      - ../live/${COMPOSE_ENV}/data/extensions/CirrusSearch:/var/www/html/extensions/CirrusSearch:ro
+      - ../live/${COMPOSE_ENV}/data/oauth2:/var/www/html/oauth2
       - ../live/${COMPOSE_ENV}/data/fr/favicon.ico:/var/www/html/favicon.ico
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -39,19 +81,25 @@ services:
       start_period: 10s
     networks:
       - web
+      - search
 
   emushpedia-mediawiki-en:
-    image: mediawiki:stable
+    image: mediawiki:1.46.0
     container_name: ${COMPOSE_ENV}-mediawiki-en
     restart: unless-stopped
     depends_on:
       emushpedia-mysql:
+        condition: service_healthy
+      emushpedia-opensearch:
         condition: service_healthy
     volumes:
       - ../live/${COMPOSE_ENV}/data/en/images:/var/www/html/images
       - ../live/${COMPOSE_ENV}/data/en/LocalSettings.php:/var/www/html/LocalSettings.php
       - ../live/${COMPOSE_ENV}/data/en/favicon.ico:/var/www/html/favicon.ico
       - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+      - ../live/${COMPOSE_ENV}/data/extensions/Elastica:/var/www/html/extensions/Elastica:ro
+      - ../live/${COMPOSE_ENV}/data/extensions/CirrusSearch:/var/www/html/extensions/CirrusSearch:ro
+      - ../live/${COMPOSE_ENV}/data/oauth2:/var/www/html/oauth2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 5s
@@ -60,19 +108,25 @@ services:
       start_period: 10s
     networks:
       - web
+      - search
 
   emushpedia-mediawiki-es:
-    image: mediawiki:stable
+    image: mediawiki:1.46.0
     container_name: ${COMPOSE_ENV}-mediawiki-es
     restart: unless-stopped
     depends_on:
       emushpedia-mysql:
+        condition: service_healthy
+      emushpedia-opensearch:
         condition: service_healthy
     volumes:
       - ../live/${COMPOSE_ENV}/data/es/images:/var/www/html/images
       - ../live/${COMPOSE_ENV}/data/es/LocalSettings.php:/var/www/html/LocalSettings.php
       - ../live/${COMPOSE_ENV}/data/es/favicon.ico:/var/www/html/favicon.ico
       - ../live/${COMPOSE_ENV}/data/extensions:/var/www/html/extensions/non-core/
+      - ../live/${COMPOSE_ENV}/data/extensions/Elastica:/var/www/html/extensions/Elastica:ro
+      - ../live/${COMPOSE_ENV}/data/extensions/CirrusSearch:/var/www/html/extensions/CirrusSearch:ro
+      - ../live/${COMPOSE_ENV}/data/oauth2:/var/www/html/oauth2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 5s
@@ -81,6 +135,7 @@ services:
       start_period: 10s
     networks:
       - web
+      - search
 
   emushpedia-nginx-fr:
     image: nginx:stable-alpine
@@ -151,6 +206,33 @@ services:
     networks:
       - web
 
+  emushpedia-nginx-root:
+    image: nginx:stable-alpine
+    container_name: ${COMPOSE_ENV}-nginx-root
+    restart: unless-stopped
+    depends_on:
+      emushpedia-mediawiki-fr:
+        condition: service_healthy
+      emushpedia-mediawiki-en:
+        condition: service_healthy
+      emushpedia-mediawiki-es:
+        condition: service_healthy
+    expose:
+      - "80"
+    volumes:
+      - ../live/${COMPOSE_ENV}/data/root/nginx/conf.d:/etc/nginx/conf.d:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.${COMPOSE_ENV}-root.rule=${TRAEFIK_RULE_ROOT}"
+      - "traefik.http.routers.${COMPOSE_ENV}-root.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}-root.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}-root.tls.certresolver=letsencrypt"
+      - "traefik.http.services.${COMPOSE_ENV}-root.loadbalancer.server.port=80"
+    networks:
+      - web
+
   emushpedia-mail:
     image: boky/postfix:latest
     container_name: ${COMPOSE_ENV}-mail
@@ -170,3 +252,5 @@ networks:
   web:
     external: true
     name: web
+  search:
+    internal: true
