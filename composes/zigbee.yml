@@ -3,7 +3,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: ${COMPOSE_ENV}-mosquitto
-    restart: unless-stopped
+    restart: always
     volumes:
       - ../live/${COMPOSE_ENV}/mosquitto/config:/mosquitto/config
       - ../live/${COMPOSE_ENV}/mosquitto/data:/mosquitto/data
@@ -14,7 +14,7 @@ services:
   zigbee2mqtt:
     image: koenkk/zigbee2mqtt:latest
     container_name: ${COMPOSE_ENV}-zigbee2mqtt
-    restart: unless-stopped
+    restart: always
     depends_on:
       - mosquitto
     volumes:
@@ -43,7 +43,7 @@ services:
   influxdb:
     image: influxdb:2
     container_name: ${COMPOSE_ENV}-influxdb
-    restart: unless-stopped
+    restart: always
     volumes:
       - ../live/${COMPOSE_ENV}/influxdb/data:/var/lib/influxdb2
       - ../live/${COMPOSE_ENV}/influxdb/config:/etc/influxdb2
@@ -64,7 +64,7 @@ services:
   telegraf:
     image: telegraf:latest
     container_name: ${COMPOSE_ENV}-telegraf
-    restart: unless-stopped
+    restart: always
     depends_on:
       - mosquitto
       - influxdb

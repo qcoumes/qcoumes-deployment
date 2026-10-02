@@ -8,14 +8,14 @@ services:
       - ../live/${COMPOSE_ENV}/folder:/folder
       - ../live/${COMPOSE_ENV}/conf:/home/filebrowser/data
       - ../live/${COMPOSE_ENV}/cache:/tmp/filebrowser
-    restart: unless-stopped
+    restart: always
     networks:
       - web
 
   filebrowser-nginx:
     image: nginx:stable-alpine
     container_name: ${COMPOSE_ENV}-nginx
-    restart: unless-stopped
+    restart: always
     expose:
       - "80"
     volumes:

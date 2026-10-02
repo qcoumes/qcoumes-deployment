@@ -2,7 +2,7 @@ services:
   traefik:
     image: traefik:v3
     container_name: ${COMPOSE_ENV}
-    restart: unless-stopped
+    restart: always
 
     command:
       # Logs
