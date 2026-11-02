@@ -296,7 +296,7 @@ services:
       POSTFIX_mydomain: emushpedia.com
       POSTFIX_INET_PROTOCOLS: ipv4
     volumes:
-      - ../live/emushpedia/data/mail/keys:/etc/opendkim/keys
+      - ../live/${COMPOSE_ENV}/data/mail/keys:/etc/opendkim/keys
     networks:
       - web
 
