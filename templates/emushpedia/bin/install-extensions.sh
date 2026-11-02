@@ -27,6 +27,7 @@ EXTENSIONS=(
   "|https://gerrit.wikimedia.org/r/mediawiki/extensions/UniversalLanguageSelector|"
   "|https://gerrit.wikimedia.org/r/mediawiki/extensions/UserMerge|"
   "|https://gerrit.wikimedia.org/r/mediawiki/extensions/Variables|"
+  "EmushpediaContributions|https://github.com/qcoumes/mediawiki-EmushpediaContributions|"
 )
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

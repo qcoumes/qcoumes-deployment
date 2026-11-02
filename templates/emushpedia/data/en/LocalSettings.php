@@ -21,6 +21,8 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 $wgSitename = "eMushpedia";
 $wgMetaNamespace = "eMushpedia";
 
+$wgEnableCanonicalServerLink = true;
+
 ## The URL base path to the directory containing the wiki;
 ## defaults for all runtime URL paths are based off of this.
 ## For more information on customizing the URLs
@@ -90,6 +92,11 @@ $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 
 # Shared database table
 # This has no effect unless $wgSharedDB is also set.
+$wgLocalDatabases = [
+    'emushpedia_fr',
+    'emushpedia_en',
+    'emushpedia_es',
+];
 $wgSharedDB = 'emushpedia_fr';
 $wgSharedTables = [
     'user',
@@ -131,7 +138,6 @@ $wgPingback = true;
 
 # Site language code, should be one of the list in ./includes/languages/data/Names.php
 $wgLanguageCode = "en";
-$wgContentLanguage = "en";
 $wgInterwikiMagic = true;
 $wgExtraLanguageNames['fr'] = 'Français';
 $wgExtraLanguageNames['en'] = 'English';
@@ -152,7 +158,7 @@ $wgAuthenticationTokenVersion = "1";
 
 # Site upgrade key. Must be set to a string (default provided) to turn on the
 # web installer while LocalSettings.php is in place
-$wgUpgradeKey = "e73e87610017bf55";
+$wgUpgradeKey = "<upgrade-key>";
 
 ## For attaching licensing metadata to pages, and displaying an
 ## appropriate copyright notice / icon. GNU Free Documentation
@@ -185,6 +191,8 @@ wfLoadSkin( 'Vector' );
 
 # Enabled extensions. Most of the extensions are enabled by adding
 wfLoadExtension( 'AbuseFilter' );
+wfLoadExtension( 'non-core/Analytics' );
+wfLoadExtension( 'non-core/Arrays' );
 wfLoadExtension( 'CategoryTree' );
 wfLoadExtension( 'CheckUser' );
 wfLoadExtension( 'Cite' );
@@ -195,6 +203,7 @@ wfLoadExtension( 'non-core/CreatePageUw' );
 wfLoadExtension( 'non-core/DarkMode' );
 wfLoadExtension( 'DiscussionTools' );
 wfLoadExtension( 'Echo' );
+wfLoadExtension( 'non-core/EmushpediaContributions' );
 wfLoadExtension( 'Gadgets' );
 wfLoadExtension( 'ImageMap' );
 wfLoadExtension( 'InputBox' );
@@ -227,3 +236,39 @@ $wgScribuntoDefaultEngine = 'luastandalone';
 
 wfLoadExtension( 'non-core/UniversalLanguageSelector' );
 $wgULSPosition = 'personal';
+
+wfLoadExtension( 'OAuth' );
+$wgOAuth2PrivateKey = '/var/www/html/oauth2/oauth2-private.key';
+$wgOAuth2PublicKey = '/var/www/html/oauth2/oauth2-public.key';
+$wgOAuthSecretKey = trim(
+    file_get_contents( '/var/www/html/oauth2/oauth-secret.key' )
+);
+$wgMWOAuthSharedUserIDs = true;
+$wgMWOAuthSharedUserSource = 'local';
+$wgMWOAuthCentralWiki = 'emushpedia_fr';
+$wgVirtualDomainsMapping['virtual-oauth'] = [
+    'db' => 'emushpedia_fr',
+];
+$wgGroupPermissions['sysop']['mwoauthproposeconsumer'] = true;
+$wgGroupPermissions['sysop']['mwoauthupdateownconsumer'] = true;
+$wgGroupPermissions['sysop']['mwoauthmanageconsumer'] = true;
+$wgGroupPermissions['sysop']['mwoauthsuppress'] = true;
+$wgGroupPermissions['sysop']['mwoauthviewsuppressed'] = true;
+
+wfLoadExtension( 'Elastica' );
+wfLoadExtension( 'CirrusSearch' );
+$wgCirrusSearchServers = [
+    'emushpedia-opensearch',
+];
+$wgCirrusSearchIndexBaseName = 'emushpedia_en';
+$wgCirrusSearchUseCompletionSuggester = true;
+$wgCirrusSearchCompletionSettings = 'fuzzy-subphrases';
+$wgCirrusSearchCompletionSuggesterSubphrases = [
+    'build' => true,
+    'use' => true,
+    'type' => 'anywords',
+    'limit' => 10,
+];
+$wgSearchType = 'CirrusSearch';
+$wgDefaultUserOptions['cirrussearch-pref-completion-profile'] = 'fuzzy-subphrases';
+
