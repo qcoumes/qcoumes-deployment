@@ -122,7 +122,7 @@ services:
     restart: always
     command: --model tiny-int8 --language fr
     volumes:
-      - ../live/zigbee/wyoming-whisper:/data
+      - ../live/${COMPOSE_ENV}/wyoming-whisper:/data
     networks:
       - zigbee
 
