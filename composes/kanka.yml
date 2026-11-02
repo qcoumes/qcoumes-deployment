@@ -1,0 +1,79 @@
+services:
+
+  kanka:
+    image: ghcr.io/kanka-ce/kanka-ce:latest
+    container_name: ${COMPOSE_ENV}-app
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/kanka:/app/www/storage
+      - ../live/${COMPOSE_ENV}/kanka/app/public:/app/www/public/storage:ro
+      - ../live/${COMPOSE_ENV}/.env:/app/www/.env
+      - ../live/${COMPOSE_ENV}/init:/custom-cont-init.d:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.${COMPOSE_ENV}.rule=${TRAEFIK_RULE}"
+      - "traefik.http.routers.${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_ENV}.service=${COMPOSE_ENV}"
+      - "traefik.http.services.${COMPOSE_ENV}.loadbalancer.server.port=80"
+    networks:
+      - kanka
+      - web
+
+  mariadb:
+    image: mariadb:11
+    container_name: ${COMPOSE_ENV}-mariadb
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - kanka
+
+  redis:
+    image: redis:alpine
+    container_name: ${COMPOSE_ENV}-redis
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - kanka
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: ${COMPOSE_ENV}-meilisearch
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/meilisearch:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://127.0.0.1:7700/health"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - kanka
+
+networks:
+  kanka:
+  web:
+    external: true
