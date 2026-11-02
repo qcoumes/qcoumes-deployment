@@ -1,4 +1,5 @@
 server:
+  cacheDir: /tmp/filebrowser
   sources:
     - path: "/folder"
       config:
