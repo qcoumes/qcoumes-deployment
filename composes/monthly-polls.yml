@@ -1,6 +1,6 @@
 services:
   monthly-polls:
-    container_name: 'monthly-polls'
+    container_name: "${COMPOSE_ENV}"
     image: 'qcoumes/monthly-polls:latest'
     env_file: "../live/${COMPOSE_ENV}/.env"
     restart: unless-stopped
