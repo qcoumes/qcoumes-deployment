@@ -1,0 +1,18 @@
+services:
+
+  emushpedia-backup:
+    build:
+      context: ../live/${COMPOSE_ENV}/docker
+      dockerfile: Dockerfile
+      args:
+        UID: ${BACKUP_UID:-1000}
+        GID: ${BACKUP_GID:-1000}
+    image: ${COMPOSE_ENV}:local
+    container_name: ${COMPOSE_ENV}
+    restart: unless-stopped
+    env_file: "../live/${COMPOSE_ENV}/.env"
+    volumes:
+      - ../live/${COMPOSE_ENV}/secrets:/config:ro
+      - ../live/${COMPOSE_ENV}/data/restic:/data/restic
+      - ../live/${COMPOSE_ENV}/data/files:/data/files
+      - ../live/${COMPOSE_ENV}/data/cache:/data/cache
