@@ -93,6 +93,58 @@ services:
       - zigbee
       - web
 
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ${COMPOSE_ENV}-homeassistant
+    restart: unless-stopped
+    volumes:
+      - ../live/${COMPOSE_ENV}/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=Europe/Paris
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+
+      - "traefik.http.routers.homeassistant-${COMPOSE_ENV}.rule=${HOMEASSISTANT_TRAEFIK_RULE}"
+      - "traefik.http.routers.homeassistant-${COMPOSE_ENV}.entrypoints=websecure"
+      - "traefik.http.routers.homeassistant-${COMPOSE_ENV}.tls=true"
+      - "traefik.http.routers.homeassistant-${COMPOSE_ENV}.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.homeassistant-${COMPOSE_ENV}.service=homeassistant-${COMPOSE_ENV}"
+      - "traefik.http.services.homeassistant-${COMPOSE_ENV}.loadbalancer.server.port=8123"
+    networks:
+      - zigbee
+      - web
+
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper:latest
+    container_name: ${COMPOSE_ENV}-wyoming-whisper
+    restart: always
+    command: --model tiny-int8 --language fr
+    volumes:
+      - ../live/zigbee/wyoming-whisper:/data
+    networks:
+      - zigbee
+
+  wyoming-piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: ${COMPOSE_ENV}-wyoming-piper
+    restart: always
+    command: --voice en_US-glados-medium --data-dir /data --download-dir /data
+    volumes:
+      - ../live/${COMPOSE_ENV}/wyoming-piper:/data
+    networks:
+      - zigbee
+
+#  ollama:
+#    image: ollama/ollama:latest
+#    container_name: ${COMPOSE_ENV}-ollama
+#    restart: always
+#    volumes:
+#      - ../live/${COMPOSE_ENV}/ollama:/root/.ollama
+#    networks:
+#      - zigbee
+
 networks:
   zigbee:
   web:
